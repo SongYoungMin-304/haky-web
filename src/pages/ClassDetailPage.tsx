@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { getMe } from '../api/auth'
 import { createBooking } from '../api/booking'
 import { getClass } from '../api/hakyClass'
-import { getMe } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
 import type { HakyClass } from '../types'
 
@@ -14,6 +14,7 @@ export default function ClassDetailPage() {
   const [loading, setLoading] = useState(true)
   const [booking, setBooking] = useState(false)
   const [message, setMessage] = useState('')
+  const [isSuccess, setIsSuccess] = useState(false)
 
   useEffect(() => {
     getClass(Number(id))
@@ -24,10 +25,7 @@ export default function ClassDetailPage() {
   const handleBook = async () => {
     if (!user) { navigate('/login'); return }
     if (!hakyClass) return
-    if (user.point < hakyClass.pointCost) {
-      navigate('/my/points/request')
-      return
-    }
+    if (user.point < hakyClass.pointCost) { navigate('/my/points/request'); return }
     setBooking(true)
     setMessage('')
     try {
@@ -35,74 +33,100 @@ export default function ClassDetailPage() {
       const updated = await getMe()
       setUser(updated)
       setMessage('신청이 완료되었습니다!')
+      setIsSuccess(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       setMessage(msg ?? '신청에 실패했습니다.')
+      setIsSuccess(false)
     } finally {
       setBooking(false)
     }
   }
 
-  if (loading) return <p>로딩 중...</p>
-  if (!hakyClass) return <p>클래스를 찾을 수 없습니다.</p>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+  if (!hakyClass) return <p className="text-slate-500">클래스를 찾을 수 없습니다.</p>
+
+  const notEnoughPoint = user ? user.point < hakyClass.pointCost : false
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', marginBottom: 16 }}>
+    <div className="max-w-2xl mx-auto">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 text-sm mb-6 transition-colors cursor-pointer bg-transparent border-none"
+      >
         ← 목록으로
       </button>
-      <h2>{hakyClass.title}</h2>
-      <p style={{ color: '#666' }}>감독: {hakyClass.coachName}</p>
-      <p style={{ color: '#555', lineHeight: 1.6 }}>{hakyClass.description}</p>
-      <div style={{ display: 'flex', gap: 32, margin: '20px 0', flexWrap: 'wrap' }}>
-        <div>
-          <p style={{ color: '#888', fontSize: 12, margin: '0 0 4px' }}>일정</p>
-          <p style={{ margin: 0, fontWeight: 600 }}>{new Date(hakyClass.schedule).toLocaleString('ko-KR')}</p>
+
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* Header band */}
+        <div className="bg-gradient-to-r from-slate-900 to-slate-700 px-8 py-6 text-white">
+          <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest mb-2">
+            {hakyClass.coachName} 감독
+          </p>
+          <h1 className="text-2xl font-black">{hakyClass.title}</h1>
         </div>
-        <div>
-          <p style={{ color: '#888', fontSize: 12, margin: '0 0 4px' }}>정원</p>
-          <p style={{ margin: 0, fontWeight: 600 }}>{hakyClass.capacity}명</p>
-        </div>
-        <div>
-          <p style={{ color: '#888', fontSize: 12, margin: '0 0 4px' }}>포인트</p>
-          <p style={{ margin: 0, fontWeight: 600, color: '#1a1a2e' }}>{hakyClass.pointCost.toLocaleString()}P</p>
+
+        <div className="p-8">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { label: '일정', value: new Date(hakyClass.schedule).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+              { label: '정원', value: `${hakyClass.capacity}명` },
+              { label: '포인트', value: `${hakyClass.pointCost.toLocaleString()}P` },
+            ].map((item) => (
+              <div key={item.label} className="bg-slate-50 rounded-xl p-4 text-center">
+                <p className="text-xs text-slate-400 mb-1">{item.label}</p>
+                <p className="font-bold text-slate-900 text-sm">{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Description */}
+          <div className="mb-8">
+            <h3 className="font-semibold text-slate-800 mb-2 text-sm">클래스 소개</h3>
+            <p className="text-slate-600 leading-relaxed text-sm whitespace-pre-line">{hakyClass.description}</p>
+          </div>
+
+          {/* Action */}
+          {user?.role === 'USER' && (
+            <div className="border-t border-slate-100 pt-6">
+              {notEnoughPoint && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-sm text-amber-700">
+                  포인트가 부족합니다. (보유: {user.point.toLocaleString()}P / 필요: {hakyClass.pointCost.toLocaleString()}P)
+                </div>
+              )}
+              <button
+                onClick={handleBook}
+                disabled={booking}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-60 cursor-pointer text-sm"
+              >
+                {booking ? '처리 중...' : notEnoughPoint ? '포인트 충전하기' : `${hakyClass.pointCost.toLocaleString()}P로 신청하기`}
+              </button>
+              {message && (
+                <p className={`mt-3 text-sm text-center font-medium ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
+                  {message}
+                </p>
+              )}
+            </div>
+          )}
+          {!user && (
+            <div className="border-t border-slate-100 pt-6">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-colors cursor-pointer text-sm"
+              >
+                로그인 후 신청
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      {user?.role === 'USER' && (
-        <>
-          {user.point < hakyClass.pointCost && (
-            <p style={{ color: '#e74c3c', fontSize: 14 }}>
-              포인트가 부족합니다. (보유: {user.point.toLocaleString()}P)
-            </p>
-          )}
-          <button
-            onClick={handleBook}
-            disabled={booking}
-            style={{
-              padding: '12px 32px',
-              background: '#1a1a2e',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              fontSize: 15,
-              cursor: 'pointer',
-            }}
-          >
-            {booking ? '처리 중...' : user.point < hakyClass.pointCost ? '포인트 충전하기' : '신청하기'}
-          </button>
-        </>
-      )}
-      {!user && (
-        <button
-          onClick={() => navigate('/login')}
-          style={{ padding: '12px 32px', background: '#1a1a2e', color: 'white', border: 'none', borderRadius: 8, fontSize: 15, cursor: 'pointer' }}
-        >
-          로그인 후 신청
-        </button>
-      )}
-      {message && (
-        <p style={{ marginTop: 12, color: message.includes('완료') ? '#27ae60' : '#e74c3c' }}>{message}</p>
-      )}
     </div>
   )
 }

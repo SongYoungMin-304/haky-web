@@ -11,76 +11,85 @@ export default function Layout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <nav
-        style={{
-          background: '#1a1a2e',
-          color: 'white',
-          padding: '0 24px',
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 24,
-        }}
-      >
-        <Link to="/classes" style={{ color: 'white', fontWeight: 700, fontSize: 18, textDecoration: 'none' }}>
-          Haky
-        </Link>
-        <Link to="/classes" style={{ color: '#ccc', textDecoration: 'none' }}>
-          클래스
-        </Link>
-        {user && (
-          <>
-            {user.role === 'USER' && (
-              <>
-                <Link to="/my/bookings" style={{ color: '#ccc', textDecoration: 'none' }}>
-                  내 신청
-                </Link>
-                <Link to="/my/points" style={{ color: '#ccc', textDecoration: 'none' }}>
-                  포인트
-                </Link>
-              </>
-            )}
-            {user.role === 'COACH' && (
-              <Link to="/coach/classes" style={{ color: '#ccc', textDecoration: 'none' }}>
-                내 클래스
-              </Link>
-            )}
-            {user.role === 'ADMIN' && (
-              <>
-                <Link to="/admin/points" style={{ color: '#ccc', textDecoration: 'none' }}>
-                  포인트 관리
-                </Link>
-                <Link to="/admin/classes" style={{ color: '#ccc', textDecoration: 'none' }}>
-                  클래스 관리
-                </Link>
-              </>
-            )}
-          </>
-        )}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
-          {user ? (
+    <div className="min-h-screen flex flex-col bg-slate-100">
+      {/* Nav */}
+      <nav className="bg-slate-900 text-white sticky top-0 z-50 shadow-lg">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-6">
+          {/* Logo */}
+          <Link to="/classes" className="flex items-center gap-2 mr-2">
+            <span className="text-blue-400 font-black text-2xl tracking-tight">H</span>
+            <span className="font-bold text-lg tracking-wide">HAKY</span>
+          </Link>
+
+          <div className="w-px h-5 bg-slate-700" />
+
+          <Link to="/classes" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+            클래스
+          </Link>
+
+          {user?.role === 'USER' && (
             <>
-              <span style={{ color: '#aaa', fontSize: 14 }}>
-                {user.name} ({user.point.toLocaleString()}P)
-              </span>
-              <button
-                onClick={handleLogout}
-                style={{ background: 'transparent', border: '1px solid #555', color: '#ccc', padding: '4px 12px', cursor: 'pointer', borderRadius: 4 }}
-              >
-                로그아웃
-              </button>
+              <Link to="/my/bookings" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+                내 신청
+              </Link>
+              <Link to="/my/points" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+                포인트
+              </Link>
             </>
-          ) : (
-            <Link to="/login" style={{ color: '#ccc', textDecoration: 'none' }}>
-              로그인
+          )}
+          {user?.role === 'COACH' && (
+            <Link to="/coach/classes" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+              내 클래스
             </Link>
           )}
+          {user?.role === 'ADMIN' && (
+            <>
+              <Link to="/admin/points" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+                포인트 관리
+              </Link>
+              <Link to="/admin/classes" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+                클래스 관리
+              </Link>
+            </>
+          )}
+
+          <div className="ml-auto flex items-center gap-4">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
+                    {user.name[0]}
+                  </div>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs text-slate-400">{user.name}</p>
+                    <p className="text-xs font-semibold text-blue-400">{user.point.toLocaleString()}P</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="text-sm text-slate-300 hover:text-white font-medium transition-colors">
+                로그인
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
-      <main style={{ flex: 1, padding: '32px 24px', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
+
+      {/* Main */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
         <Outlet />
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-500 text-center text-xs py-4">
+        © 2026 HAKY — Hockey Class Platform
+      </footer>
     </div>
   )
 }

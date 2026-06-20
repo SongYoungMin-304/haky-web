@@ -4,7 +4,7 @@ export type BookingStatus = 'CONFIRMED' | 'CANCELLED'
 
 export interface User {
   id: number
-  email: string
+  loginId: string
   name: string
   role: Role
   point: number
