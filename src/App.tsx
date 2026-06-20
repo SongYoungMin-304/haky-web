@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { getMe } from './api/auth'
+import Layout from './components/Layout'
+import AdminPointsPage from './pages/AdminPointsPage'
+import ClassDetailPage from './pages/ClassDetailPage'
+import ClassFormPage from './pages/ClassFormPage'
+import ClassListPage from './pages/ClassListPage'
+import CoachClassesPage from './pages/CoachClassesPage'
+import LoginPage from './pages/LoginPage'
+import MyBookingsPage from './pages/MyBookingsPage'
+import MyPointsPage from './pages/MyPointsPage'
+import PointRequestPage from './pages/PointRequestPage'
+import SignupPage from './pages/SignupPage'
+import { useAuthStore } from './store/authStore'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const { token, setUser } = useAuthStore()
+
+  useEffect(() => {
+    if (token) {
+      getMe()
+        .then(setUser)
+        .catch(() => {})
+    }
+  }, [token, setUser])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/classes" replace />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+          <Route path="classes" element={<ClassListPage />} />
+          <Route path="classes/:id" element={<ClassDetailPage />} />
+          <Route path="my/points" element={<MyPointsPage />} />
+          <Route path="my/points/request" element={<PointRequestPage />} />
+          <Route path="my/bookings" element={<MyBookingsPage />} />
+          <Route path="coach/classes" element={<CoachClassesPage />} />
+          <Route path="coach/classes/new" element={<ClassFormPage />} />
+          <Route path="coach/classes/:id/edit" element={<ClassFormPage />} />
+          <Route path="admin/points" element={<AdminPointsPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
