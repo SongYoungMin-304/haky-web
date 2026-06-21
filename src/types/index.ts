@@ -43,6 +43,81 @@ export interface Booking {
   cancelledAt: string | null
 }
 
+export type TeamApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type TeamPaymentStatus = 'PAID' | 'FAILED'
+
+export interface Team {
+  id: number
+  coachId: number
+  coachName: string
+  name: string
+  description: string
+  monthlyPointCost: number
+  activeMemberCount: number
+  createdAt: string
+}
+
+export interface TeamApplication {
+  id: number
+  teamId: number
+  teamName: string
+  userId: number
+  userName: string
+  userLoginId: string
+  phone: string
+  message: string
+  status: TeamApplicationStatus
+  appliedAt: string
+  processedAt: string | null
+}
+
+export interface MyTeamStatus {
+  teamId: number
+  applicationStatus: TeamApplicationStatus | null
+  isMember: boolean
+}
+
+export interface TeamMember {
+  userId: number
+  userName: string
+  joinedAt: string
+}
+
+export interface MyMembership {
+  teamId: number
+  teamName: string
+  coachName: string
+  monthlyPointCost: number
+  joinedAt: string
+  thisMonthStatus: TeamPaymentStatus | null
+  thisMonthPaidAt: string | null
+}
+
+export interface TeamPayment {
+  id: number
+  membershipId: number
+  userName: string
+  year: number
+  month: number
+  amount: number
+  status: TeamPaymentStatus
+  paidAt: string
+}
+
+export interface TeamPaymentStatusRow {
+  userId: number
+  userName: string
+  membershipId: number
+  paymentStatus: TeamPaymentStatus | null
+  paidAt: string | null
+}
+
+export interface TeamPaymentStatusResponse {
+  year: number
+  month: number
+  members: TeamPaymentStatusRow[]
+}
+
 export interface TokenResponse {
   token: string
 }

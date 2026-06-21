@@ -19,7 +19,7 @@ export default function LoginPage() {
       localStorage.setItem('token', token)
       const user = await getMe()
       setAuth(token, user)
-      navigate('/classes')
+      navigate('/teams')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       setError(msg ?? '아이디 또는 비밀번호를 확인해주세요.')
